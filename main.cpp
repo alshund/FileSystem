@@ -15,8 +15,8 @@ struct FileMapping {
     unsigned char *dataPtr;
 };
 
-size_t block_size = 5 * sizeof(unsigned int);
-size_t pointer_size = sizeof(unsigned int);
+size_t block_size = 5 * sizeof(char);
+size_t pointer_size = sizeof(char);
 
 struct DataBlock {
     unsigned char *ptr;
@@ -95,12 +95,25 @@ int main() {
 
     init(8000);
 
-//    int i = 7;
-//    memcpy(fileMapping->dataPtr, &i, sizeof(i));
-//    int *pBuffer;
-//    memcpy(pBuffer, fileMapping->dataPtr, sizeof(i));
-//    std::cout<< *pBuffer;
-//    std::cout << fileSystemData[0].ptr;
+    std::string temp1 = "catedgdfgdfg";
+    char  *check = (char *) temp1.c_str();
+    std::cout<< strlen(check)<<std::endl;
+
+    std::string temp2 = "dog";
+
+    memcpy(fileSystemData[0].ptr, temp1.c_str() , block_size);
+    memcpy(fileSystemData[3].ptr, temp2.c_str(), block_size);
+
+    char *pBuffer = (char *) malloc(block_size);
+    
+    memcpy(pBuffer, fileSystemData[0].ptr, block_size);
+    std::string test = pBuffer;
+    std::cout<< test<<std::endl;
+
+    memcpy(pBuffer, fileSystemData[3].ptr, block_size);
+    test = pBuffer;
+    std::cout<< test;
+
 
     UnmapViewOfFile(fileMapping->dataPtr);
     CloseHandle(fileMapping->hFileMapping);
