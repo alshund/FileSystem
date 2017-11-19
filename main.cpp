@@ -24,7 +24,7 @@ struct DataBlock {
     bool empty;
 };
 
-FileMapping *filMapping = (FileMapping *) malloc(sizeof(FileMapping));
+FileMapping *fileMapping = (FileMapping *) malloc(sizeof(FileMapping));
 DataBlock *fileSystemData;
 
 int init(size_t prefered_size) {
@@ -74,18 +74,18 @@ int init(size_t prefered_size) {
     }
 
 
-    filMapping->hFile = hFile;
-    filMapping->hFileMapping = hFileMapping;
-    filMapping->fileMappingPtr = fileMappingPtr;
-    filMapping->fileSize = (size_t) dwFileSize;
+    fileMapping->hFile = hFile;
+    fileMapping->hFileMapping = hFileMapping;
+    fileMapping->fileMappingPtr = fileMappingPtr;
+    fileMapping->fileSize = (size_t) dwFileSize;
 
     fileSystemData = new DataBlock[blocksAmount];
-    fileSystemData[0].ptr = filMapping->fileMappingPtr;
+    fileSystemData[0].ptr = fileMapping->fileMappingPtr;
     fileSystemData[0].next_index = 0;
     fileSystemData[0].empty = false;
 
     for(int i = 1; i < blocksAmount; i++){
-        fileSystemData[i].ptr = filMapping->fileMappingPtr + i*block_size;
+        fileSystemData[i].ptr = fileMapping->fileMappingPtr + i*block_size;
         fileSystemData[i].next_index = 0;
         fileSystemData[i].empty = true;
     }
@@ -95,7 +95,11 @@ int main() {
 
     init(8000);
 
-
-    std::cout << filMapping->fileSize;
+    int i = 7;
+    memcpy(fileMapping->fileMappingPtr, &i, sizeof(i));
+    int *pBuffer;
+    memcpy(pBuffer, fileMapping->fileMappingPtr, sizeof(i));
+    std::cout<< *pBuffer;
+    std::cout << fileMapping->fileSize;
     return 0;
 }
