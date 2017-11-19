@@ -12,7 +12,7 @@ struct FileMapping {
     HANDLE hFile;
     HANDLE hFileMapping;
     size_t fileSize;
-    unsigned char *fileMappingPtr;
+    unsigned char *dataPtr;
 };
 
 size_t block_size = 5 * sizeof(unsigned int);
@@ -76,16 +76,16 @@ int init(size_t prefered_size) {
 
     fileMapping->hFile = hFile;
     fileMapping->hFileMapping = hFileMapping;
-    fileMapping->fileMappingPtr = fileMappingPtr;
+    fileMapping->dataPtr = fileMappingPtr;
     fileMapping->fileSize = (size_t) dwFileSize;
 
     fileSystemData = new DataBlock[blocksAmount];
-    fileSystemData[0].ptr = fileMapping->fileMappingPtr;
+    fileSystemData[0].ptr = fileMapping->dataPtr;
     fileSystemData[0].next_index = 0;
     fileSystemData[0].empty = false;
 
     for(int i = 1; i < blocksAmount; i++){
-        fileSystemData[i].ptr = fileMapping->fileMappingPtr + i*block_size;
+        fileSystemData[i].ptr = fileMapping->dataPtr + i*block_size;
         fileSystemData[i].next_index = 0;
         fileSystemData[i].empty = true;
     }
@@ -95,11 +95,16 @@ int main() {
 
     init(8000);
 
-    int i = 7;
-    memcpy(fileMapping->fileMappingPtr, &i, sizeof(i));
-    int *pBuffer;
-    memcpy(pBuffer, fileMapping->fileMappingPtr, sizeof(i));
-    std::cout<< *pBuffer;
-    std::cout << fileMapping->fileSize;
+//    int i = 7;
+//    memcpy(fileMapping->dataPtr, &i, sizeof(i));
+//    int *pBuffer;
+//    memcpy(pBuffer, fileMapping->dataPtr, sizeof(i));
+//    std::cout<< *pBuffer;
+//    std::cout << fileSystemData[0].ptr;
+
+    UnmapViewOfFile(fileMapping->dataPtr);
+    CloseHandle(fileMapping->hFileMapping);
+    CloseHandle(fileMapping->hFile);
+    free(fileMapping);
     return 0;
 }
