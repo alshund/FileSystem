@@ -27,11 +27,19 @@ int main() {
         return CREATE_FILE_ERROR;
     }
 
+    char capacity[1000];
+    memset(capacity, 0, 1000);
+
+    DWORD fileSize;
+    WriteFile(hFile, capacity, sizeof(capacity), &fileSize, nullptr);
+
     DWORD dwFileSize = GetFileSize(hFile, nullptr); //nullptr - max file size = 4Gb
     if (dwFileSize == INVALID_FILE_SIZE) {
         CloseHandle(hFile);
         return GET_FILE_SIZE_ERROR;
     }
+
+    std::cout << dwFileSize << std::endl;
 
     HANDLE hFileMapping = CreateFileMapping(hFile,
                                             nullptr,
