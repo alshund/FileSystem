@@ -1,11 +1,13 @@
 #include <iostream>
 #include <windows.h>
+#include <cmath>
 
 
 #define CREATE_FILE_ERROR 1;
 #define GET_FILE_SIZE_ERROR 2;
 #define CREATE_FILE_MAPPING_ERROR 3;
 #define MAP_VIEW_OF_FILE_ERROR 4;
+#define LACK_OF_MEMORY 5;
 
 
 struct FileMapping {
@@ -24,6 +26,10 @@ public:
     unsigned char *ptr;
 
     void write(const char *buffer) {
+        char *pBuffer = (char *) malloc(block_size);
+        memcpy(pBuffer,buffer,block_size);
+
+
         memcpy(ptr + pointer_size, buffer, block_size);
     }
 
@@ -43,7 +49,7 @@ public:
         return pBuffer;
     }
 
-    bool isEmpty(){
+    bool isEmpty() {
         char *pBuffer = (char *) malloc(block_size);
         memcpy(pBuffer, ptr + pointer_size, block_size);
         std::string tmp = pBuffer;
@@ -52,14 +58,16 @@ public:
 };
 
 
-class FileSystem{
+class FileSystem {
 public:
     FileMapping *fileMapping = (FileMapping *) malloc(sizeof(FileMapping));
     DataBlock *fileSystemData;
+    int blocksAmount;
+    boolean empty_block_found = false;
 
     int init(size_t prefered_size) {
-        int blocksAmount = prefered_size / (DataBlock::block_size + DataBlock::pointer_size);
-        size_t size = blocksAmount *  (DataBlock::block_size + DataBlock::pointer_size);
+        blocksAmount = prefered_size / (DataBlock::block_size + DataBlock::pointer_size);
+        size_t size = blocksAmount * (DataBlock::block_size + DataBlock::pointer_size);
 
         HANDLE hFile = CreateFile("file_system",
                                   GENERIC_READ | GENERIC_WRITE,
@@ -112,12 +120,53 @@ public:
         fileSystemData = new DataBlock[blocksAmount];
 
         for (int i = 0; i < blocksAmount; i++) {
-            fileSystemData[i].ptr = fileMapping->dataPtr + i *  (DataBlock::block_size + DataBlock::pointer_size);
+            fileSystemData[i].ptr = fileMapping->dataPtr + i * (DataBlock::block_size + DataBlock::pointer_size);
         }
         return 0;
     }
 
-    ~FileSystem(){
+    int write(unsigned int index,const char *input) {
+        unsigned int input_size = strlen(input);
+        unsigned int blocks_amount = ceil((double) input_size / (double) DataBlock::block_size);
+        unsigned int priv_index;
+        unsigned int offset = 0;
+
+        char *buffer = (char *) malloc(DataBlock::block_size);
+
+        while (true){
+            priv_index = index;
+            index =  fileSystemData[index].getNext();
+            if(index == 0){
+                index = priv_index;
+                break;
+            }
+        }
+        for (int i = 0; i < blocks_amount; i++) {
+            empty_block_found = false;
+
+            memcpy(buffer, input + i*DataBlock::block_size, DataBlock::block_size);
+
+            fileSystemData[index].write(buffer);
+
+            for (int j = 0; j < this->blocksAmount; j++) {
+                if (fileSystemData[j].isEmpty()) {
+                    priv_index = index;
+                    index = j;
+                    empty_block_found = true;
+                    break;
+                }
+            }
+
+            if(!empty_block_found) return LACK_OF_MEMORY;
+
+            fileSystemData[priv_index].setNext(index);
+
+        }
+
+        return 0;
+    }
+
+    ~FileSystem() {
         UnmapViewOfFile(fileMapping->dataPtr);
         CloseHandle(fileMapping->hFileMapping);
         CloseHandle(fileMapping->hFile);
@@ -129,21 +178,33 @@ int main() {
 
     FileSystem *fileSystem = new FileSystem();
 
-    fileSystem -> init(8000);
+    fileSystem->init(8000);
 
-    std::string temp2 = "dog 5";
+    std::string temp2 = "dogdogdogdoe catcatcatcae manmanmanmae";
+    std::string temp1 = "dogdogdogdo";
 
 
-    fileSystem ->fileSystemData[0].write(temp2.c_str());
+//    fileSystem->fileSystemData[0].write(temp2.c_str());
+//    std::string test;
+//    test = fileSystem->fileSystemData[0].read();
+//    std::cout << test << "\n";
+//    std::cout << fileSystem->fileSystemData[0].isEmpty() << "\n";
+//    std::cout << fileSystem->fileSystemData[5].isEmpty() << "\n";
+//
+//    fileSystem->fileSystemData[0].setNext(666);
+//    std::cout << fileSystem->fileSystemData[0].getNext();
+
+  //  fileSystem->write(0,temp2.c_str());
+    fileSystem->fileSystemData[0].write(temp1.c_str());
     std::string test;
-    test = fileSystem ->fileSystemData[0].read();
-    std::cout << test<<"\n";
-    std::cout << fileSystem ->fileSystemData[0].isEmpty()<<"\n";
-    std::cout << fileSystem ->fileSystemData[5].isEmpty()<<"\n";
-
-    fileSystem ->fileSystemData[0].setNext(666);
-    std::cout << fileSystem ->fileSystemData[0].getNext();
-
+    test = fileSystem->fileSystemData[0].read();
+    std::cout << test << "\n";
+//    test = fileSystem->fileSystemData[1].read();
+//    std::cout << test << "\n";
+//    test = fileSystem->fileSystemData[2].read();
+//    std::cout << test << "\n";
+//    test = fileSystem->fileSystemData[3].read();
+//    std::cout << test << "\n";
     delete fileSystem;
     return 0;
 }
