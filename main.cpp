@@ -42,6 +42,13 @@ public:
         memcpy(pBuffer, ptr + pointer_size, block_size);
         return pBuffer;
     }
+
+    bool isEmpty(){
+        char *pBuffer = (char *) malloc(block_size);
+        memcpy(pBuffer, ptr + pointer_size, block_size);
+        std::string tmp = pBuffer;
+        return tmp == "";
+    }
 };
 
 FileMapping *fileMapping = (FileMapping *) malloc(sizeof(FileMapping));
@@ -110,15 +117,15 @@ int main() {
 
     init(8000);
 
-    std::string temp2 = "123456789123";
-
-    unsigned int index = 666;
+    std::string temp2 = "dog 5";
 
 
     fileSystemData[0].write(temp2.c_str());
     std::string test;
     test = fileSystemData[0].read();
     std::cout << test<<"\n";
+    std::cout << fileSystemData[0].isEmpty()<<"\n";
+    std::cout << fileSystemData[5].isEmpty()<<"\n";
 
     fileSystemData[0].setNext(666);
     std::cout << fileSystemData[0].getNext();
