@@ -15,21 +15,41 @@ struct FileMapping {
     unsigned char *dataPtr;
 };
 
-size_t block_size = 5 * sizeof(char);
-size_t pointer_size = sizeof(char);
 
-struct DataBlock {
+class DataBlock {
+public:
+    const static size_t block_size = 12 * sizeof(char);
+    const static size_t pointer_size = sizeof(unsigned int);
+
     unsigned char *ptr;
-    unsigned int next_index;
-    bool empty;
+
+    void write(const char *buffer) {
+        memcpy(ptr + pointer_size, buffer, block_size);
+    }
+
+    void setNext(unsigned int next) {
+        memcpy(ptr, &next, pointer_size);
+    }
+
+    unsigned int getNext() {
+        unsigned int *indexBuffer = (unsigned int *) malloc(pointer_size);
+        memcpy(indexBuffer, ptr, pointer_size);
+        return *indexBuffer;
+    }
+
+    char *read() {
+        char *pBuffer = (char *) malloc(block_size);
+        memcpy(pBuffer, ptr + pointer_size, block_size);
+        return pBuffer;
+    }
 };
 
 FileMapping *fileMapping = (FileMapping *) malloc(sizeof(FileMapping));
 DataBlock *fileSystemData;
 
 int init(size_t prefered_size) {
-    int blocksAmount = prefered_size / block_size;
-    size_t size = blocksAmount*block_size;
+    int blocksAmount = prefered_size / (DataBlock::block_size + DataBlock::pointer_size);
+    size_t size = blocksAmount *  (DataBlock::block_size + DataBlock::pointer_size);
 
     HANDLE hFile = CreateFile("file_system",
                               GENERIC_READ | GENERIC_WRITE,
@@ -80,14 +100,9 @@ int init(size_t prefered_size) {
     fileMapping->fileSize = (size_t) dwFileSize;
 
     fileSystemData = new DataBlock[blocksAmount];
-    fileSystemData[0].ptr = fileMapping->dataPtr;
-    fileSystemData[0].next_index = 0;
-    fileSystemData[0].empty = false;
 
-    for(int i = 1; i < blocksAmount; i++){
-        fileSystemData[i].ptr = fileMapping->dataPtr + i*block_size;
-        fileSystemData[i].next_index = 0;
-        fileSystemData[i].empty = true;
+    for (int i = 0; i < blocksAmount; i++) {
+        fileSystemData[i].ptr = fileMapping->dataPtr + i *  (DataBlock::block_size + DataBlock::pointer_size);
     }
 }
 
@@ -95,25 +110,18 @@ int main() {
 
     init(8000);
 
-    std::string temp1 = "catedgdfgdfg";
-    char  *check = (char *) temp1.c_str();
-    std::cout<< strlen(check)<<std::endl;
+    std::string temp2 = "123456789123";
 
-    std::string temp2 = "dog";
+    unsigned int index = 666;
 
-    memcpy(fileSystemData[0].ptr, temp1.c_str() , block_size);
-    memcpy(fileSystemData[3].ptr, temp2.c_str(), block_size);
 
-    char *pBuffer = (char *) malloc(block_size);
-    
-    memcpy(pBuffer, fileSystemData[0].ptr, block_size);
-    std::string test = pBuffer;
-    std::cout<< test<<std::endl;
+    fileSystemData[0].write(temp2.c_str());
+    std::string test;
+    test = fileSystemData[0].read();
+    std::cout << test<<"\n";
 
-    memcpy(pBuffer, fileSystemData[3].ptr, block_size);
-    test = pBuffer;
-    std::cout<< test;
-
+    fileSystemData[0].setNext(666);
+    std::cout << fileSystemData[0].getNext();
 
     UnmapViewOfFile(fileMapping->dataPtr);
     CloseHandle(fileMapping->hFileMapping);
