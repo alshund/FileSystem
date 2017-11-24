@@ -1,6 +1,7 @@
 #include <iostream>
 #include <windows.h>
 #include <cmath>
+#include <sstream>
 
 
 #define CREATE_FILE_ERROR 1;
@@ -8,6 +9,7 @@
 #define CREATE_FILE_MAPPING_ERROR 3;
 #define MAP_VIEW_OF_FILE_ERROR 4;
 #define LACK_OF_MEMORY 5;
+#define WRONG_FILENAME 7;
 #define SUCCESSFUL_IMPLEMENTATION 0;
 
 
@@ -61,7 +63,6 @@ public:
     FileMapping *fileMapping = (FileMapping *) malloc(sizeof(FileMapping));
     DataBlock *fileSystemData;
     int blocksAmount;
-    boolean empty_block_found = false;
 
     int init(size_t prefered_size) {
         blocksAmount = prefered_size / (DataBlock::block_size + DataBlock::pointer_size);
@@ -120,7 +121,8 @@ public:
         for (int i = 0; i < blocksAmount; i++) {
             fileSystemData[i].ptr = fileMapping->dataPtr + i * (DataBlock::block_size + DataBlock::pointer_size);
         }
-        return 0;
+        fileSystemData[0].write("^init^");
+        return SUCCESSFUL_IMPLEMENTATION;
     }
 
     int write(unsigned int index, const char *input) {
@@ -130,6 +132,7 @@ public:
         unsigned int input_size = strlen(input);
         unsigned int blocks_amount = ceil((double) input_size / (double) DataBlock::block_size);
         unsigned int previous_index;
+        boolean empty_block_found = false;
         //  unsigned int offset = 0;
 
         char *buffer = (char *) malloc(DataBlock::block_size);
@@ -163,7 +166,33 @@ public:
 
         }
 
-        return 0;
+        return SUCCESSFUL_IMPLEMENTATION;
+    }
+
+    int createFile(const char* filename){
+        //TODO: add regexp here, name size longer than 6, $ and ^ are not available in name
+        if(strlen(filename) > 6)
+            return WRONG_FILENAME;
+
+        unsigned int index;
+        boolean empty_block_found = false;
+
+        for (int i = 0; i < this->blocksAmount; i++) {
+            if (fileSystemData[i].isEmpty()) {
+                index = i;
+                empty_block_found = true;
+                break;
+            }
+        }
+
+        if (!empty_block_found) return LACK_OF_MEMORY;
+
+        fileSystemData[index].write(filename);
+        std::string correct_name = filename;
+        std::stringstream ss;
+        ss << correct_name <<"$"<< index;
+        write(0,ss.str().c_str());
+        return SUCCESSFUL_IMPLEMENTATION;
     }
 
     ~FileSystem() {
@@ -201,13 +230,20 @@ int main() {
     // std::cout << test << "\n";
     std::string test;
 
-    fileSystem->write(0, temp2.c_str());
+    fileSystem->write(1, temp2.c_str());
 
 
-    test = fileSystem->fileSystemData[0].read();
-    test += fileSystem->fileSystemData[1].read();
+    test = fileSystem->fileSystemData[1].read();
     test += fileSystem->fileSystemData[2].read();
     test += fileSystem->fileSystemData[3].read();
+    test += fileSystem->fileSystemData[4].read();
+    std::cout << test << "\n";
+
+    fileSystem->createFile("test");
+
+    test = fileSystem->fileSystemData[0].read();
+    test += fileSystem->fileSystemData[5].read();
+    test += fileSystem->fileSystemData[6].read();
     std::cout << test << "\n";
 
     delete fileSystem;
