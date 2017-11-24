@@ -8,6 +8,7 @@
 #define CREATE_FILE_MAPPING_ERROR 3;
 #define MAP_VIEW_OF_FILE_ERROR 4;
 #define LACK_OF_MEMORY 5;
+#define SUCCESSFUL_IMPLEMENTATION 0;
 
 
 struct FileMapping {
@@ -122,41 +123,43 @@ public:
         return 0;
     }
 
-    int write(unsigned int index,const char *input) {
+    int write(unsigned int index, const char *input) {
+        if (index > blocksAmount)
+            return LACK_OF_MEMORY;
+
         unsigned int input_size = strlen(input);
         unsigned int blocks_amount = ceil((double) input_size / (double) DataBlock::block_size);
-        unsigned int priv_index;
-        unsigned int offset = 0;
+        unsigned int previous_index;
+        //  unsigned int offset = 0;
 
         char *buffer = (char *) malloc(DataBlock::block_size);
 
-        while (true){
-            priv_index = index;
-            index =  fileSystemData[index].getNext();
-            if(index == 0){
-                index = priv_index;
+        while (true) {
+            previous_index = index;
+            index = fileSystemData[index].getNext();
+            if (index == 0) {
+                index = previous_index;
                 break;
             }
         }
+
         for (int i = 0; i < blocks_amount; i++) {
             empty_block_found = false;
 
-            memcpy(buffer, input + i*DataBlock::block_size, DataBlock::block_size);
-
-            fileSystemData[index].write(buffer);
-
             for (int j = 0; j < this->blocksAmount; j++) {
                 if (fileSystemData[j].isEmpty()) {
-                    priv_index = index;
+                    previous_index = index;
                     index = j;
                     empty_block_found = true;
                     break;
                 }
             }
 
-            if(!empty_block_found) return LACK_OF_MEMORY;
+            if (!empty_block_found) return LACK_OF_MEMORY;
 
-            fileSystemData[priv_index].setNext(index);
+            memcpy(buffer, input + i * DataBlock::block_size, DataBlock::block_size);
+            fileSystemData[index].write(buffer);
+            fileSystemData[previous_index].setNext(index);
 
         }
 
@@ -191,19 +194,22 @@ int main() {
 //    fileSystem->fileSystemData[0].setNext(666);
 //    std::cout << fileSystem->fileSystemData[0].getNext();
 
-  //  fileSystem->write(0,temp2.c_str());
-    fileSystem->fileSystemData[0].write(temp1.c_str());
-    fileSystem->fileSystemData[1].write(temp2.c_str());
+    //    fileSystem->fileSystemData[0].write(temp1.c_str());
+//    fileSystem->fileSystemData[1].write(temp2.c_str());
+//    test = fileSystem->fileSystemData[0].read();
+//    test += fileSystem->fileSystemData[1].read();
+    // std::cout << test << "\n";
     std::string test;
+
+    fileSystem->write(0, temp2.c_str());
+
+
     test = fileSystem->fileSystemData[0].read();
     test += fileSystem->fileSystemData[1].read();
+    test += fileSystem->fileSystemData[2].read();
+    test += fileSystem->fileSystemData[3].read();
     std::cout << test << "\n";
-//    test = fileSystem->fileSystemData[1].read();
-//    std::cout << test << "\n";
-//    test = fileSystem->fileSystemData[2].read();
-//    std::cout << test << "\n";
-//    test = fileSystem->fileSystemData[3].read();
-//    std::cout << test << "\n";
+
     delete fileSystem;
     return 0;
 }
