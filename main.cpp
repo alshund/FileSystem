@@ -26,10 +26,6 @@ public:
     unsigned char *ptr;
 
     void write(const char *buffer) {
-        char *pBuffer = (char *) malloc(block_size);
-        memcpy(pBuffer,buffer,block_size);
-
-
         memcpy(ptr + pointer_size, buffer, block_size);
     }
 
@@ -46,6 +42,7 @@ public:
     char *read() {
         char *pBuffer = (char *) malloc(block_size);
         memcpy(pBuffer, ptr + pointer_size, block_size);
+        pBuffer[block_size] = '\0';
         return pBuffer;
     }
 
@@ -180,8 +177,8 @@ int main() {
 
     fileSystem->init(8000);
 
-    std::string temp2 = "dogdogdogdoe catcatcatcae manmanmanmae";
-    std::string temp1 = "dogdogdogdo";
+    std::string temp2 = "line2dogdogdogdocatcatcatcaemanmanmanmae";
+    std::string temp1 = "line1dfgdfgdfgdfgdogdogdogdodfg";
 
 
 //    fileSystem->fileSystemData[0].write(temp2.c_str());
@@ -196,8 +193,10 @@ int main() {
 
   //  fileSystem->write(0,temp2.c_str());
     fileSystem->fileSystemData[0].write(temp1.c_str());
+    fileSystem->fileSystemData[1].write(temp2.c_str());
     std::string test;
     test = fileSystem->fileSystemData[0].read();
+    test += fileSystem->fileSystemData[1].read();
     std::cout << test << "\n";
 //    test = fileSystem->fileSystemData[1].read();
 //    std::cout << test << "\n";
