@@ -11,6 +11,7 @@
 #define MAP_VIEW_OF_FILE_ERROR 4;
 #define LACK_OF_MEMORY 5;
 #define WRONG_FILENAME 7;
+#define FILE_NOT_FOUND 9;
 #define SUCCESSFUL_IMPLEMENTATION 0;
 
 
@@ -233,7 +234,7 @@ public:
         return data_buffer;
     }
 
-    unsigned int findFileIndex(const char * file_name){
+     int findFileIndex(const char * file_name){
         unsigned int index = 0;
         unsigned int *indexBuffer = (unsigned int *) malloc(DataBlock::pointer_size);
         char* buffer = new char[DataBlock::block_size-DataBlock::pointer_size];
@@ -249,6 +250,17 @@ public:
         }while(index != 0);
 
         return -1;
+    }
+
+    std::string readFromFile(const char * file_name){
+       int index = findFileIndex(file_name);
+        if(index == -1) return "";
+        return read(index);
+    }
+    int writeToFile(const char * file_name,const char *input){
+        int index = findFileIndex(file_name);
+        if(index == -1) return WRONG_FILENAME;
+        return write(index,input);
     }
 
     ~FileSystem() {
@@ -291,7 +303,9 @@ int main() {
     fileSystem->createFile("test");
     fileSystem->createFile("test1");
 
-    std::cout << fileSystem->findFileIndex(test.c_str()) << "\n";
+    fileSystem->writeToFile(test.c_str(),temp2.c_str());
+
+    std::cout << fileSystem->readFromFile(test.c_str()) << "\n";
 
     delete fileSystem;
     return 0;
