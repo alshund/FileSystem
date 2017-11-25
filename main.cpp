@@ -225,7 +225,7 @@ public:
 
         std::string data_buffer;
         DataBlock data_block;
-        unsigned int block_index = start_block_index;
+        unsigned int block_index = fileSystemData[start_block_index].getNext();
         do {
             data_block = fileSystemData[block_index];
             data_buffer += data_block.read();
