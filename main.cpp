@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <cmath>
 #include <sstream>
+#include <assert.h>
 
 
 #define CREATE_FILE_ERROR 1;
@@ -174,6 +175,8 @@ public:
             return WRONG_FILENAME;
 
         unsigned int index;
+        unsigned int file_index;
+        unsigned int previous_index = index;
         boolean empty_block_found = false;
 
         for (int i = 0; i < this->blocksAmount; i++) {
@@ -187,11 +190,37 @@ public:
         if (!empty_block_found) return LACK_OF_MEMORY;
 
         fileSystemData[index].write(filename);
-        std::string correct_name = filename;
-        std::stringstream ss;
-        ss << correct_name <<"$"<< index;
-        write(0,ss.str().c_str());
-        return SUCCESSFUL_IMPLEMENTATION;
+        file_index = index;
+       // std::string correct_name = filename;
+       // std::stringstream ss;
+        //ss << correct_name <<"$"<< index;
+        //write(0,ss.str().c_str());
+        index = 0;
+        while (true) {
+            previous_index = index;
+            index = fileSystemData[index].getNext();
+            if (index == 0) {
+                index = previous_index;
+                break;
+            }
+        }
+
+        for(int i = 0; i < blocksAmount; i++){
+            if(fileSystemData[i].isEmpty()) {
+                previous_index = index;
+                index = i;
+                empty_block_found = true;
+            }
+        }
+
+        if(empty_block_found){
+            fileSystemData[previous_index].setNext(index);
+            memcpy(fileSystemData[index].ptr + DataBlock::pointer_size,
+                   filename, DataBlock::block_size - DataBlock::pointer_size);
+            memcpy(fileSystemData[index].ptr + DataBlock::block_size, &file_index, DataBlock::pointer_size);
+            return SUCCESSFUL_IMPLEMENTATION;
+        } else return LACK_OF_MEMORY;
+
     }
 
     std::string read(unsigned int start_block_index) {
@@ -245,18 +274,11 @@ int main() {
     fileSystem->write(1, temp2.c_str());
 
 
-    test = fileSystem->fileSystemData[1].read();
-    test += fileSystem->fileSystemData[2].read();
-    test += fileSystem->fileSystemData[3].read();
-    test += fileSystem->fileSystemData[4].read();
-    std::cout << test << "\n";
+    int i = fileSystem->createFile("test");
 
-    fileSystem->createFile("test");
+    assert( i == 0);
 
-    test = fileSystem->fileSystemData[0].read();
-    test += fileSystem->fileSystemData[5].read();
-    test += fileSystem->fileSystemData[6].read();
-    std::cout << test << "\n";
+    std::cout << fileSystem->read(1) << "\n";
 
     delete fileSystem;
     return 0;
