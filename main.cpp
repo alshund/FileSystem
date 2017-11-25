@@ -210,6 +210,7 @@ public:
                 previous_index = index;
                 index = i;
                 empty_block_found = true;
+                break;
             }
         }
 
