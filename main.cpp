@@ -10,8 +10,9 @@
 #define CREATE_FILE_MAPPING_ERROR 3;
 #define MAP_VIEW_OF_FILE_ERROR 4;
 #define LACK_OF_MEMORY 5;
-#define WRONG_FILENAME 7;
-#define FILE_NOT_FOUND 9;
+#define WRONG_FILENAME -3;
+#define FILE_ALREADY_EXIST -2;
+#define FILE_NOT_FOUND -1;
 #define SUCCESSFUL_IMPLEMENTATION 0;
 
 
@@ -172,9 +173,18 @@ public:
     }
 
     int createFile(const char *filename) {
-        if (strlen(filename) > 8) {
+//        if (strlen(filename) > 8) {
+//            return WRONG_FILENAME;
+//        }
+//
 
+        int response = findFileIndex(filename);
+
+        if (response == -3)
             return WRONG_FILENAME;
+
+        if (response != -1) {
+            return FILE_ALREADY_EXIST;
         }
 
 
@@ -238,6 +248,10 @@ public:
     }
 
     int findFileIndex(const char *file_name) {
+        if (strlen(file_name) > 8) {
+            return WRONG_FILENAME;
+        }
+
         unsigned int index = 0;
         unsigned int *indexBuffer = (unsigned int *) malloc(DataBlock::pointer_size);
         char *buffer = new char[DataBlock::block_size - DataBlock::pointer_size];
@@ -252,7 +266,7 @@ public:
             }
         } while (index != 0);
 
-        return -1;
+        return FILE_NOT_FOUND;
     }
 
     std::string readFromFile(const char *file_name) {
@@ -263,30 +277,40 @@ public:
 
     int writeToFile(const char *file_name, const char *input) {
         int index = findFileIndex(file_name);
-        if (index == -1) return WRONG_FILENAME;
+        if (index == -3) return WRONG_FILENAME;
+        if (index == -1) return FILE_NOT_FOUND;
         return write(index, input);
     }
 
-    int copyFile(const char *file_name,const char *new_file_name){
-        if (strlen(new_file_name) > 8) {
+    int copyFile(const char *file_name, const char *new_file_name) {
 
-            return WRONG_FILENAME;
-        }
         int index = findFileIndex(file_name);
-        if(index == -1)
+        if (index == -3) return WRONG_FILENAME;
+
+        if (index == -1)
             return FILE_NOT_FOUND;
+
+        int response = findFileIndex(new_file_name);
+        if(response == -3)
+            return WRONG_FILENAME;
+
+        if(response != -1)
+            return FILE_ALREADY_EXIST;
 
         createFile(new_file_name);
 
-        writeToFile(new_file_name,read(index).c_str());
+        writeToFile(new_file_name, read(index).c_str());
         return SUCCESSFUL_IMPLEMENTATION;
 
     }
 
-    int renameFile(const char *file_name,const char *new_file_name){
-        if (strlen(new_file_name) > 8) {
+    int renameFile(const char *file_name, const char *new_file_name) {
+        int response = findFileIndex(new_file_name);
+        if(response == -3)
             return WRONG_FILENAME;
-        }
+
+        if(response != -1)
+            return FILE_ALREADY_EXIST;
 
         unsigned int index = 0;
         unsigned int *indexBuffer = (unsigned int *) malloc(DataBlock::pointer_size);
@@ -299,7 +323,7 @@ public:
             if (strcmp(file_name, buffer) == 0) {
                 memcpy(indexBuffer, fileSystemData[index].ptr + DataBlock::block_size, DataBlock::pointer_size);
                 fileSystemData[*indexBuffer].write(new_file_name);
-                memcpy(fileSystemData[index].ptr+DataBlock::pointer_size,new_file_name,
+                memcpy(fileSystemData[index].ptr + DataBlock::pointer_size, new_file_name,
                        DataBlock::block_size - DataBlock::pointer_size);
                 return SUCCESSFUL_IMPLEMENTATION;
             }
@@ -354,11 +378,12 @@ int main() {
 
     std::cout << fileSystem->readFromFile(test.c_str()) << "\n";
 
-    fileSystem->copyFile(test.c_str(),test2.c_str());
+    fileSystem->copyFile(test.c_str(), test2.c_str());
 
     std::cout << fileSystem->readFromFile(test2.c_str()) << "\n";
 
-    fileSystem->renameFile(test2.c_str(),new_test2.c_str());
+    fileSystem->renameFile(test2.c_str(), new_test2.c_str());
+
     std::cout << fileSystem->readFromFile(new_test2.c_str()) << "\n";
     std::cout << fileSystem->readFromFile(test2.c_str()) << "\n";
     std::cout << "check" << "\n";
