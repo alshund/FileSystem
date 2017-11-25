@@ -173,11 +173,6 @@ public:
     }
 
     int createFile(const char *filename) {
-//        if (strlen(filename) > 8) {
-//            return WRONG_FILENAME;
-//        }
-//
-
         int response = findFileIndex(filename);
 
         if (response == -3)
@@ -256,15 +251,17 @@ public:
         unsigned int *indexBuffer = (unsigned int *) malloc(DataBlock::pointer_size);
         char *buffer = new char[DataBlock::block_size - DataBlock::pointer_size];
         unsigned int previous_index = 0;
-        do {
+        while (true) {
             index = fileSystemData[index].getNext();
+            if (index == 0) break;
             memcpy(buffer, fileSystemData[index].ptr + DataBlock::pointer_size,
                    DataBlock::block_size - DataBlock::pointer_size);
             if (strcmp(file_name, buffer) == 0) {
                 memcpy(indexBuffer, fileSystemData[index].ptr + DataBlock::block_size, DataBlock::pointer_size);
                 return *indexBuffer;
             }
-        } while (index != 0);
+
+        };
 
         return FILE_NOT_FOUND;
     }
@@ -291,10 +288,10 @@ public:
             return FILE_NOT_FOUND;
 
         int response = findFileIndex(new_file_name);
-        if(response == -3)
+        if (response == -3)
             return WRONG_FILENAME;
 
-        if(response != -1)
+        if (response != -1)
             return FILE_ALREADY_EXIST;
 
         createFile(new_file_name);
@@ -306,18 +303,19 @@ public:
 
     int renameFile(const char *file_name, const char *new_file_name) {
         int response = findFileIndex(new_file_name);
-        if(response == -3)
+        if (response == -3)
             return WRONG_FILENAME;
 
-        if(response != -1)
+        if (response != -1)
             return FILE_ALREADY_EXIST;
 
         unsigned int index = 0;
         unsigned int *indexBuffer = (unsigned int *) malloc(DataBlock::pointer_size);
         char *buffer = new char[DataBlock::block_size - DataBlock::pointer_size];
         unsigned int previous_index = 0;
-        do {
+        while (true) {
             index = fileSystemData[index].getNext();
+            if (index == 0) break;
             memcpy(buffer, fileSystemData[index].ptr + DataBlock::pointer_size,
                    DataBlock::block_size - DataBlock::pointer_size);
             if (strcmp(file_name, buffer) == 0) {
@@ -327,12 +325,13 @@ public:
                        DataBlock::block_size - DataBlock::pointer_size);
                 return SUCCESSFUL_IMPLEMENTATION;
             }
-        } while (index != 0);
+
+        }
 
         return FILE_NOT_FOUND;
     }
 
-    int deleteFile(const char *file_name){
+    int deleteFile(const char *file_name) {
         int response = findFileIndex(file_name);
         unsigned int index = 0;
         unsigned int previous_index = 0;
@@ -343,42 +342,61 @@ public:
         char chunk[DataBlock::block_size + DataBlock::pointer_size];
         memset(chunk, 0, DataBlock::block_size + DataBlock::pointer_size);
 
-        if(response == -3)
+        if (response == -3)
             return WRONG_FILENAME;
 
-        if(response == -1)
+        if (response == -1)
             return FILE_NOT_FOUND;
 
-        do {
+        while (true) {
             previous_index = index;
             index = fileSystemData[index].getNext();
+            if (index == 0) break;
+
             memcpy(buffer, fileSystemData[index].ptr + DataBlock::pointer_size,
                    DataBlock::block_size - DataBlock::pointer_size);
+
             if (strcmp(file_name, buffer) == 0) {
                 next_index = fileSystemData[index].getNext();
 
                 memcpy(indexBuffer, fileSystemData[index].ptr + DataBlock::block_size, DataBlock::pointer_size);
 
-                memcpy( fileSystemData[index].ptr, chunk , DataBlock::block_size + DataBlock::pointer_size);
+                memcpy(fileSystemData[index].ptr, chunk, DataBlock::block_size + DataBlock::pointer_size);
 
                 fileSystemData[previous_index].setNext(next_index);
                 return deleteFileData(*indexBuffer);
             }
-        } while (index != 0);
+
+        };
         return FILE_NOT_FOUND;
     }
 
-    int deleteFileData(unsigned int index){
+    int deleteFileData(unsigned int index) {
         unsigned int next_index = 0;
         char chunk[DataBlock::block_size + DataBlock::pointer_size];
         memset(chunk, 0, DataBlock::block_size + DataBlock::pointer_size);
-        do{
+        while (true) {
             next_index = fileSystemData[index].getNext();
-            memcpy( fileSystemData[index].ptr, chunk , DataBlock::block_size + DataBlock::pointer_size);
+            memcpy(fileSystemData[index].ptr, chunk, DataBlock::block_size + DataBlock::pointer_size);
             index = next_index;
-        }while (index != 0);
+            if (index == 0) break;
+        }
 
         return SUCCESSFUL_IMPLEMENTATION;
+    }
+
+    void showAllFiles() {
+        unsigned int index = 0;
+        char *buffer = new char[DataBlock::block_size - DataBlock::pointer_size];
+        std::string file_name;
+        while (true) {
+            index = fileSystemData[index].getNext();
+            if (index == 0) break;
+            memcpy(buffer, fileSystemData[index].ptr + DataBlock::pointer_size,
+                   DataBlock::block_size - DataBlock::pointer_size);
+            file_name = buffer;
+            std::cout << file_name << "\n";
+        }
     }
 
     ~FileSystem() {
@@ -398,22 +416,6 @@ int main() {
     std::string temp2 = "line2dogdogdogdocatcatcatcaemanmanmanmae";
     std::string temp1 = "line1dfgdfgdfgdfgdogdogdogdodfg";
 
-
-//    fileSystem->fileSystemData[0].write(temp2.c_str());
-//    std::string test;
-//    test = fileSystem->fileSystemData[0].read();
-//    std::cout << test << "\n";
-//    std::cout << fileSystem->fileSystemData[0].isEmpty() << "\n";
-//    std::cout << fileSystem->fileSystemData[5].isEmpty() << "\n";
-//
-//    fileSystem->fileSystemData[0].setNext(666);
-//    std::cout << fileSystem->fileSystemData[0].getNext();
-
-    //    fileSystem->fileSystemData[0].write(temp1.c_str());
-//    fileSystem->fileSystemData[1].write(temp2.c_str());
-//    test = fileSystem->fileSystemData[0].read();
-//    test += fileSystem->fileSystemData[1].read();
-    // std::cout << test << "\n";
     std::string test = "test1";
     std::string test2 = "test3";
     std::string new_test2 = "CatDog";
@@ -422,6 +424,8 @@ int main() {
 
     fileSystem->createFile("test");
     fileSystem->createFile("test1");
+    fileSystem->createFile("onemore");
+    fileSystem->createFile("qwer");
 
     fileSystem->writeToFile(test.c_str(), temp2.c_str());
 
@@ -430,16 +434,28 @@ int main() {
     fileSystem->copyFile(test.c_str(), test2.c_str());
 
     std::cout << fileSystem->readFromFile(test2.c_str()) << "\n";
-
+    fileSystem->showAllFiles();
+    std::cout << "-------------------------" << "\n";
     fileSystem->renameFile(test2.c_str(), new_test2.c_str());
 
     std::cout << fileSystem->readFromFile(new_test2.c_str()) << "\n";
-    std::cout << fileSystem->readFromFile(test2.c_str()) << "\n";
-    std::cout << "check" << "\n";
+
+    fileSystem->showAllFiles();
 
     fileSystem->deleteFile(new_test2.c_str());
 
+    std::cout << "-------------------------" << "\n";
 
+    fileSystem->showAllFiles();
+    std::cout << "-------------------------" << "\n";
+    std::cout << fileSystem->readFromFile(test.c_str()) << "\n";
+    fileSystem->createFile("qwerty");
+    std::cout << "-------------------------" << "\n";
+
+    fileSystem->showAllFiles();
+
+    int response = fileSystem->findFileIndex(test2.c_str());
+    std::cout<<response<<"\n";
 
     delete fileSystem;
     return 0;
