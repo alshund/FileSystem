@@ -170,8 +170,7 @@ public:
     }
 
     int createFile(const char* filename){
-        //TODO: add regexp here, name size longer than 6, $ and ^ are not available in name
-        if(strlen(filename) > 6)
+        if(strlen(filename) > 8)
             return WRONG_FILENAME;
 
         unsigned int index;
