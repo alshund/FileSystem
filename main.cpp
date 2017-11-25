@@ -195,6 +195,19 @@ public:
         return SUCCESSFUL_IMPLEMENTATION;
     }
 
+    std::string read(unsigned int start_block_index) {
+
+        std::string data_buffer;
+        DataBlock data_block;
+        unsigned int block_index = start_block_index;
+        do {
+            data_block = fileSystemData[block_index];
+            data_buffer += data_block.read();
+            block_index = data_block.getNext();
+        } while(block_index != 0 || fileSystemData[block_index].isEmpty());
+        return data_buffer;
+    }
+
     ~FileSystem() {
         UnmapViewOfFile(fileMapping->dataPtr);
         CloseHandle(fileMapping->hFileMapping);
