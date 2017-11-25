@@ -332,6 +332,55 @@ public:
         return FILE_NOT_FOUND;
     }
 
+    int deleteFile(const char *file_name){
+        int response = findFileIndex(file_name);
+        unsigned int index = 0;
+        unsigned int previous_index = 0;
+        unsigned int next_index = 0;
+        char *buffer = new char[DataBlock::block_size - DataBlock::pointer_size];
+        unsigned int *indexBuffer = (unsigned int *) malloc(DataBlock::pointer_size);
+
+        char chunk[DataBlock::block_size + DataBlock::pointer_size];
+        memset(chunk, 0, DataBlock::block_size + DataBlock::pointer_size);
+
+        if(response == -3)
+            return WRONG_FILENAME;
+
+        if(response == -1)
+            return FILE_NOT_FOUND;
+
+        do {
+            previous_index = index;
+            index = fileSystemData[index].getNext();
+            memcpy(buffer, fileSystemData[index].ptr + DataBlock::pointer_size,
+                   DataBlock::block_size - DataBlock::pointer_size);
+            if (strcmp(file_name, buffer) == 0) {
+                next_index = fileSystemData[index].getNext();
+
+                memcpy(indexBuffer, fileSystemData[index].ptr + DataBlock::block_size, DataBlock::pointer_size);
+
+                memcpy( fileSystemData[index].ptr, chunk , DataBlock::block_size + DataBlock::pointer_size);
+
+                fileSystemData[previous_index].setNext(next_index);
+                return deleteFileData(*indexBuffer);
+            }
+        } while (index != 0);
+        return FILE_NOT_FOUND;
+    }
+
+    int deleteFileData(unsigned int index){
+        unsigned int next_index = 0;
+        char chunk[DataBlock::block_size + DataBlock::pointer_size];
+        memset(chunk, 0, DataBlock::block_size + DataBlock::pointer_size);
+        do{
+            next_index = fileSystemData[index].getNext();
+            memcpy( fileSystemData[index].ptr, chunk , DataBlock::block_size + DataBlock::pointer_size);
+            index = next_index;
+        }while (index != 0);
+
+        return SUCCESSFUL_IMPLEMENTATION;
+    }
+
     ~FileSystem() {
         UnmapViewOfFile(fileMapping->dataPtr);
         CloseHandle(fileMapping->hFileMapping);
@@ -387,6 +436,10 @@ int main() {
     std::cout << fileSystem->readFromFile(new_test2.c_str()) << "\n";
     std::cout << fileSystem->readFromFile(test2.c_str()) << "\n";
     std::cout << "check" << "\n";
+
+    fileSystem->deleteFile(new_test2.c_str());
+
+
 
     delete fileSystem;
     return 0;
