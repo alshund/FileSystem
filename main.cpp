@@ -191,10 +191,6 @@ public:
 
         fileSystemData[index].write(filename);
         file_index = index;
-       // std::string correct_name = filename;
-       // std::stringstream ss;
-        //ss << correct_name <<"$"<< index;
-        //write(0,ss.str().c_str());
         index = 0;
         while (true) {
             previous_index = index;
@@ -237,6 +233,24 @@ public:
         return data_buffer;
     }
 
+    unsigned int findFileIndex(const char * file_name){
+        unsigned int index = 0;
+        unsigned int *indexBuffer = (unsigned int *) malloc(DataBlock::pointer_size);
+        char* buffer = new char[DataBlock::block_size-DataBlock::pointer_size];
+        unsigned int previous_index = 0;
+        do{
+            index = fileSystemData[index].getNext();
+            memcpy(buffer,fileSystemData[index].ptr+DataBlock::pointer_size,
+                   DataBlock::block_size-DataBlock::pointer_size);
+            if(strcmp(file_name,buffer) == 0){
+                memcpy(indexBuffer, fileSystemData[index].ptr + DataBlock::block_size, DataBlock::pointer_size);
+                return *indexBuffer;
+            }
+        }while(index != 0);
+
+        return -1;
+    }
+
     ~FileSystem() {
         UnmapViewOfFile(fileMapping->dataPtr);
         CloseHandle(fileMapping->hFileMapping);
@@ -270,16 +284,14 @@ int main() {
 //    test = fileSystem->fileSystemData[0].read();
 //    test += fileSystem->fileSystemData[1].read();
     // std::cout << test << "\n";
-    std::string test;
-
+    std::string test = "test1";
     fileSystem->write(1, temp2.c_str());
 
 
-    int i = fileSystem->createFile("test");
+    fileSystem->createFile("test");
+    fileSystem->createFile("test1");
 
-    assert( i == 0);
-
-    std::cout << fileSystem->read(1) << "\n";
+    std::cout << fileSystem->findFileIndex(test.c_str()) << "\n";
 
     delete fileSystem;
     return 0;
