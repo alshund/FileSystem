@@ -5,6 +5,7 @@
 #ifndef FILESYSTEM_ERRORSCODE_H
 #define FILESYSTEM_ERRORSCODE_H
 
+
 class ErrorsCode {
 
 public:
@@ -14,7 +15,7 @@ public:
     static const short SUCCESSFUL_IMPLEMENTATION = 0;
 
     static const short SUCCESSFUL_WRITE = 5;
-    static const short LAC_OF_MEMORY = -1;
+    static const short LACK_OF_MEMORY = -1;
     static const short WRONG_FILE_NAME = -2;
     static const short FILE_NOT_FOUND = -3;
     static const short FILE_ALREADY_EXIST = -4;

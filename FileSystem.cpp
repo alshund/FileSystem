@@ -47,7 +47,7 @@ int FileSystem::createFile(const char *fileName) {
     }  else if (fileIndex != ErrorsCode::FILE_NOT_FOUND) {
 
         return ErrorsCode::FILE_ALREADY_EXIST;
-    } else if (fileBlockIndex != ErrorsCode::LAC_OF_MEMORY) {
+    } else if (fileBlockIndex != ErrorsCode::LACK_OF_MEMORY) {
 
         int fileNameBlock = 0;
         int lastRecordedFile = findLastRecordedBlock(fileNameBlock);
@@ -64,10 +64,10 @@ int FileSystem::createFile(const char *fileName) {
         if (findEmptyBlock) {
             return ErrorsCode::SUCCESSFUL_IMPLEMENTATION;
         } else {
-            return ErrorsCode::LAC_OF_MEMORY;
+            return ErrorsCode::LACK_OF_MEMORY;
         }
     } else {
-        return ErrorsCode::LAC_OF_MEMORY;
+        return ErrorsCode::LACK_OF_MEMORY;
     }
 }
 
@@ -149,10 +149,10 @@ int FileSystem::writeFileBlocks(unsigned int firstBlockIndex, const char *inputB
         if (findEmptyBlock) {
             return ErrorsCode::SUCCESSFUL_IMPLEMENTATION;
         } else {
-            return ErrorsCode::LAC_OF_MEMORY;
+            return ErrorsCode::LACK_OF_MEMORY;
         }
     } else {
-        return ErrorsCode::LAC_OF_MEMORY;
+        return ErrorsCode::LACK_OF_MEMORY;
     }
 }
 
@@ -287,13 +287,14 @@ void FileSystem::showAllFiles() {
     unsigned int nextFileIndex;
     char *buffer = new char[DataBlock::BLOCK_SIZE - DataBlock::POINTER_SIZE];
     std::string fileName;
-    do {
+    while(true) {
         fileIndex = fileSystemData[fileIndex].getNext();
+        if(fileIndex == 0) break;
         memcpy(buffer, fileSystemData[fileIndex].getBlockPTR() + DataBlock::POINTER_SIZE, DataBlock::BLOCK_SIZE - DataBlock::POINTER_SIZE);
         fileName = buffer;
         std::cout << fileName << "\n";
         nextFileIndex = fileSystemData[fileIndex].getNext();
-    } while (nextFileIndex != 0);
+    };
 }
 
 std::string FileSystem::readFileBlocks(unsigned int start_block_index) {
@@ -344,7 +345,7 @@ int FileSystem::findEmptyBlock() {
             return blockIndex;
         }
     }
-    return ErrorsCode::LAC_OF_MEMORY;
+    return ErrorsCode::LACK_OF_MEMORY;
 }
 
 int FileSystem::findFileIndex(const char *fileName) {
