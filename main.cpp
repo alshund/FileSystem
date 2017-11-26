@@ -1,51 +1,196 @@
 
 #include <iostream>
 #include <vector>
+#include <assert.h>
 #include "FileSystem.h"
 
 
-void touchTest(){
+void touchTest() {
+    int error;
+    FileSystem *fileSystem = new FileSystem();
+    error = fileSystem->initialize(80);
+    assert(error == 0);
+
+    error = fileSystem->createFile("dsfsdfsdfsdfsdfsdfsdf");
+    assert(error == -2);
+    error = fileSystem->createFile("test");
+    assert(error == 0);
+    error = fileSystem->createFile("test");
+    assert(error == -4);
+    error = fileSystem->createFile("test1");
+    assert(error == 0);
+    error = fileSystem->createFile("test2");
+    assert(error == -1);
+    delete fileSystem;
+    std::cout << "touch tests passed\n";
+}
+
+void writeTest() {
+    int error;
+    FileSystem *fileSystem = new FileSystem();
+    error = fileSystem->initialize(80);
+    assert(error == 0);
+
+    error = fileSystem->createFile("test");
+    assert(error == 0);
+    error = fileSystem->write("testsdgdsgsdgsdgsd","ddsgdsgdsgdfddsgdsgdsgdf");
+    assert( error == -2 );
+
+    error = fileSystem->write("test1","ddsgdsgdsgdfddsgdsgdsgdf");
+    assert( error == -3 );
+
+    error = fileSystem->write("test","ddsgdsgdsgdfddsgdsgdsgdf");
+    assert( error == 0 );
+
+    error = fileSystem->write("test","ddsgdsgdsgdfddsgdsgdsgdf");
+    assert( error == -1 );
+    delete fileSystem;
+
+    std::cout << "write test passed\n";
+}
+
+void initTest() {
+    int error = 0;
+    FileSystem *fileSystem = new FileSystem();
+    error = fileSystem->initialize(8000);
+    assert(error == 0);
+    error = fileSystem->initialize(8000);
+    assert(error == 0);
+    delete fileSystem;
+    fileSystem = new FileSystem();
+    error = fileSystem->initialize(8000);
+    assert(error == 0);
+    delete fileSystem;
+    std::cout << "init tests passed\n";
 
 }
 
-void writeTest(){
+void readTest() {
+    std::string str;
+    int error;
+    FileSystem *fileSystem = new FileSystem();
+    error = fileSystem->initialize(80);
+    assert(error == 0);
 
+    str = fileSystem->read("gfdgdfgfdgggggggggggg");
+    assert(str == "");
+    str = fileSystem->read("test");
+    assert(str == "");
+
+    error = fileSystem->createFile("test");
+    assert(error == 0);
+    str = fileSystem->read("test");
+    assert(str == "$empty file$");
+    error = fileSystem->write("test","ddsgdsgdsgdfddsgdsgdsgdf");
+    assert( error == 0 );
+    str = fileSystem->read("test");
+    assert(str == "ddsgdsgdsgdfddsgdsgdsgdf");
+    delete  fileSystem;
+    std::cout << "read tests passed\n";
 }
 
-void readTest(){
+void renameTest() {
+    int error;
+    FileSystem *fileSystem = new FileSystem();
+    error = fileSystem->initialize(800);
+    assert(error == 0);
+    error = fileSystem->createFile("test");
+    assert(error == 0);
+    error = fileSystem->createFile("test1");
+    assert(error == 0);
 
+    error = fileSystem->renameFile("testdgdfgggggggggggg","file");
+    assert(error == -2);
+    error = fileSystem->renameFile("test","filefdggggggggggggggggggggggggggf");
+    assert(error == -2);
+    error = fileSystem->renameFile("test","test1");
+    assert(error == -4);
+    error = fileSystem->renameFile("test2","file");
+    assert(error == -3);
+    error = fileSystem->renameFile("test","file");
+    assert(error == 0);
+    delete  fileSystem;
+    std::cout << "rename tests passed\n";
 }
 
-void renameTest(){
+void copyTest() {
+    std::string str1;
+    std::string str2;
+    int error;
+    FileSystem *fileSystem = new FileSystem();
+    error = fileSystem->initialize(800);
+    assert(error == 0);
+    error = fileSystem->createFile("test");
+    assert(error == 0);
 
+    error = fileSystem->copy("testtttttttttttttttttttttttttttt","file");
+    assert(error == -2);
+    error = fileSystem->copy("test","fileeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+    assert(error == -2);
+    error = fileSystem->copy("test1","file");
+    assert(error == -3);
+    error = fileSystem->copy("test","file");
+    assert(error == 0);
+    error = fileSystem->copy("test","file");
+    assert(error == -4);
+    error = fileSystem->write("test","ddsgdsgdsgdfddsgdsgdsgdf");
+    assert( error == 0 );
+    str1 = fileSystem->read("test");
+    str2 = fileSystem->read("file");
+    assert( str1 != str2);
+    error = fileSystem->copy("test","file1");
+    assert(error == 0);
+    str1 = fileSystem->read("test");
+    str2 = fileSystem->read("file1");
+    assert( str1 == str2);
+    delete fileSystem;
+    std::cout << "copy tests passed\n";
 }
 
-void copyTest(){
+void deleteTest() {
+    int error;
+    FileSystem *fileSystem = new FileSystem();
+    error = fileSystem->initialize(800);
+    assert(error == 0);
+    error = fileSystem->createFile("test");
+    assert(error == 0);
 
+    error = fileSystem->deleteFile("dfffffffffffffffffffff");
+    assert(error == -2);
+    error = fileSystem->deleteFile("test1");
+    assert(error == -3);
+    error = fileSystem->deleteFile("test");
+    assert(error == 0);
+    error = fileSystem->deleteFile("test");
+    assert(error == -3);
+    error = fileSystem->createFile("test");
+    assert(error == 0);
+    error = fileSystem->deleteFile("test");
+    assert(error == 0);
+    delete fileSystem;
+    std::cout << "delete tests passed\n";
 }
 
-void deleteTest(){
-
-}
-
-void run_all_tests(){
-
+void run_all_tests() {
+    initTest();
+    touchTest();
+    writeTest();
+    readTest();
+    renameTest();
+    copyTest();
+    deleteTest();
+    std::cout << "all tests passed\n";
 }
 
 int main() {
-
+    run_all_tests();
     FileSystem *fileSystem = new FileSystem();
     fileSystem->initialize(8000);
-//    fileSystem->createFile("mama");
-//    fileSystem->createFile("papa");
-//    fileSystem->createFile("as");
-    //   fileSystem->write("mama", "1234567890qweqweqweqevvfvfvfvffvfvfvfvfvfv");
-    //   std::cout << fileSystem->read("mama") << std::endl;
-//    fileSystem->showAllFiles();
+
+
     std::string input;
     std::string word;
     int error = 0;
-
 
 
     while (true) {

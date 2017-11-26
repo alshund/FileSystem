@@ -8,6 +8,9 @@
 #include "ErrorsCode.h"
 
 int FileSystem::initialize(size_t fileSize) {
+    UnmapViewOfFile(this->fileMappingPTR);
+    CloseHandle(this->hFileMapping);
+    CloseHandle(this->hFile);
 
     this->fileSize = fileSize;
     this->blockAmount = getBlockAmount();
@@ -162,7 +165,9 @@ std::string FileSystem::read(const char *fileName) {
     if (fileIndex == ErrorsCode::FILE_NOT_FOUND || fileIndex == ErrorsCode::WRONG_FILE_NAME) {
         return "";
     } else {
-        return readFileBlocks(fileIndex);
+        std::string str = readFileBlocks(fileIndex);
+        if(str == "") str = "$empty file$";
+        return str;
     }
 }
 
@@ -207,7 +212,10 @@ int FileSystem::renameFile(const char *oldFileName, const char *newFileName) {
     int oldFileIndex = findFileIndex(oldFileName);
     int newFileIndex = findFileIndex(newFileName);
 
-    if (newFileIndex == ErrorsCode::WRONG_FILE_NAME) {
+    if (oldFileIndex == ErrorsCode::WRONG_FILE_NAME) {
+
+        return ErrorsCode::WRONG_FILE_NAME;
+    } else if (newFileIndex == ErrorsCode::WRONG_FILE_NAME) {
 
         return ErrorsCode::WRONG_FILE_NAME;
     } else if (oldFileIndex == ErrorsCode::FILE_NOT_FOUND) {
@@ -320,11 +328,12 @@ std::string FileSystem::readFileBlocks(unsigned int start_block_index) {
     std::string data_buffer;
     DataBlock data_block;
     unsigned int block_index = fileSystemData[start_block_index].getNext();
-    do {
+    while(true) {
+        if(block_index == 0) break;
         data_block = fileSystemData[block_index];
         data_buffer += data_block.read();
         block_index = data_block.getNext();
-    } while (block_index != 0 && block_index != start_block_index);
+    } ;
     return data_buffer;
 }
 
