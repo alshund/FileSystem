@@ -10,7 +10,6 @@ int main() {
     fileSystem->createFile("mama");
     fileSystem->createFile("papa");
     fileSystem->createFile("as");
-    fileSystem->createFile("ds");
     fileSystem->write("mama", "1234567890qweqweqweqevvfvfvfvffvfvfvfvfvfv");
     std::cout << fileSystem->read("mama") << std::endl;
     fileSystem->showAllFiles();
