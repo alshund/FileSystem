@@ -191,7 +191,7 @@ int FileSystem::copy(const char *fileFrom, const char *fileTo) {
     } else if (fileToIndex == ErrorsCode::WRONG_FILE_NAME) {
 
         return ErrorsCode::WRONG_FILE_NAME;
-    } else if (fileToIndex == ErrorsCode::FILE_ALREADY_EXIST) {
+    } else if (fileToIndex != ErrorsCode::FILE_NOT_FOUND) {
 
         return ErrorsCode::FILE_ALREADY_EXIST;
     } else {
@@ -210,7 +210,9 @@ int FileSystem::renameFile(const char *oldFileName, const char *newFileName) {
     if (newFileIndex == ErrorsCode::WRONG_FILE_NAME) {
 
         return ErrorsCode::WRONG_FILE_NAME;
-    } else if (newFileIndex == ErrorsCode::FILE_ALREADY_EXIST) {
+    } else if (oldFileIndex == ErrorsCode::FILE_NOT_FOUND) {
+        return ErrorsCode::FILE_NOT_FOUND;
+    } else if (newFileIndex != ErrorsCode::FILE_NOT_FOUND) {
 
         return ErrorsCode::FILE_ALREADY_EXIST;
     } else {
@@ -293,6 +295,22 @@ void FileSystem::showAllFiles() {
         memcpy(buffer, fileSystemData[fileIndex].getBlockPTR() + DataBlock::POINTER_SIZE, DataBlock::BLOCK_SIZE - DataBlock::POINTER_SIZE);
         fileName = buffer;
         std::cout << fileName << "\n";
+        nextFileIndex = fileSystemData[fileIndex].getNext();
+    };
+}
+
+void FileSystem::dump(){
+    unsigned int fileIndex = 0;
+    unsigned int nextFileIndex;
+    char *buffer = new char[DataBlock::BLOCK_SIZE - DataBlock::POINTER_SIZE];
+    std::string fileName;
+    while(true) {
+        fileIndex = fileSystemData[fileIndex].getNext();
+        if(fileIndex == 0) break;
+        memcpy(buffer, fileSystemData[fileIndex].getBlockPTR() + DataBlock::POINTER_SIZE, DataBlock::BLOCK_SIZE - DataBlock::POINTER_SIZE);
+        fileName = buffer;
+        std::cout << "file name: " << fileName << "\n";
+        std::cout << read(fileName.c_str())<<"\n";
         nextFileIndex = fileSystemData[fileIndex].getNext();
     };
 }

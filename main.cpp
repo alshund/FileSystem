@@ -4,6 +4,34 @@
 #include "FileSystem.h"
 
 
+void touchTest(){
+
+}
+
+void writeTest(){
+
+}
+
+void readTest(){
+
+}
+
+void renameTest(){
+
+}
+
+void copyTest(){
+
+}
+
+void deleteTest(){
+
+}
+
+void run_all_tests(){
+
+}
+
 int main() {
 
     FileSystem *fileSystem = new FileSystem();
@@ -17,6 +45,8 @@ int main() {
     std::string input;
     std::string word;
     int error = 0;
+
+
 
     while (true) {
         std::getline(std::cin, input);
@@ -67,6 +97,12 @@ int main() {
             } else if (wordsVector[0] == "ls") {
                 if (wordsVector.size() == 1) {
                     fileSystem->showAllFiles();
+
+                } else std::cout << "wrong parameters\n";
+
+            } else if (wordsVector[0] == "dump") {
+                if (wordsVector.size() == 1) {
+                    fileSystem->dump();
 
                 } else std::cout << "wrong parameters\n";
 

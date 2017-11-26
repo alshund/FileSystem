@@ -50,6 +50,7 @@ public:
     int renameFile(const char *oldFileName, const char *newFileName);
     int deleteFile(const char *fileName);
     void showAllFiles();
+    void dump();
 
     virtual ~FileSystem();
 };
