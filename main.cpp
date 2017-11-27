@@ -185,7 +185,7 @@ void run_all_tests() {
 int main() {
     run_all_tests();
     FileSystem *fileSystem = new FileSystem();
-    fileSystem->initialize(8000);
+    fileSystem->open("system", 8000);
 
 
     std::string input;

@@ -7,6 +7,42 @@
 #include "FileSystem.h"
 #include "ErrorsCode.h"
 
+int FileSystem::open(const char *fileSystemName, size_t fileSize) {
+
+    UnmapViewOfFile(this->fileMappingPTR);
+    CloseHandle(this->hFileMapping);
+    CloseHandle(this->hFile);
+
+    this->fileSize = fileSize;
+    this->blockAmount = getBlockAmount();
+    this->fileSize = blockAmount * (DataBlock::POINTER_SIZE + DataBlock::BLOCK_SIZE);
+
+    this->hFile = openPhysicalFile(fileSystemName);
+    if (this->hFile == INVALID_HANDLE_VALUE) {
+        this->hFile = createPhysicalFile(fileSystemName);
+        if (this->hFile == INVALID_HANDLE_VALUE) {
+            return ErrorsCode::CREATE_FILE_ERROR;
+        }
+    }
+
+    this->hFileMapping = createFileMapping();
+    if (this->hFileMapping == nullptr) {
+        CloseHandle(this->hFile);
+        return ErrorsCode::CREATE_FILE_MAPPING_ERROR;
+    }
+
+    this->fileMappingPTR = static_cast<unsigned char *>(getFileMappingPTR());
+    if (this->fileMappingPTR == nullptr) {
+        CloseHandle(this->hFileMapping);
+        CloseHandle(this->hFile);
+        return ErrorsCode::MAP_VIEW_OF_FILE_ERROR;
+    }
+
+    setFileSystemData();
+    return ErrorsCode::SUCCESSFUL_IMPLEMENTATION;
+
+}
+
 int FileSystem::initialize(size_t fileSize) {
     UnmapViewOfFile(this->fileMappingPTR);
     CloseHandle(this->hFileMapping);
@@ -88,6 +124,18 @@ HANDLE FileSystem::createPhysicalFile(const char *fileName) {
                       0,
                       nullptr,
                       CREATE_ALWAYS,
+                      FILE_ATTRIBUTE_NORMAL,
+                      nullptr
+    );
+}
+
+HANDLE FileSystem::openPhysicalFile(const char *fileName) {
+
+    return CreateFile(fileName,
+                      GENERIC_READ | GENERIC_WRITE,
+                      0,
+                      nullptr,
+                      OPEN_EXISTING,
                       FILE_ATTRIBUTE_NORMAL,
                       nullptr
     );
@@ -394,17 +442,6 @@ int FileSystem::findFileIndex(const char *fileName) {
         return ErrorsCode::WRONG_FILE_NAME;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 FileSystem::~FileSystem() {

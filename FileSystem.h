@@ -22,6 +22,7 @@ private:
     unsigned int blockAmount;
 
     void setFileMemory();
+    HANDLE openPhysicalFile(const char *fileName);
     HANDLE createPhysicalFile(const char *fileName);
     HANDLE createFileMapping();
     HANDLE getFileMappingPTR();
@@ -42,6 +43,7 @@ private:
 
 public:
 
+    int open(const char *fileSystemName, size_t fileSize);
     int initialize(size_t preferredSize);
     int createFile(const char *fileName);
     std::string read(const char *fileName);
