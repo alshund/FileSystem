@@ -12,64 +12,114 @@ FileSystem *fileSystem;
 
 typedef std::function<int(std::vector<std::string>)> functionPtr;
 
-void touchTest() {
-    int error;
-    FileSystem *fileSystem = new FileSystem();
-    error = fileSystem->initialize(80);
-    assert(error == 0);
-
-    error = fileSystem->createFile("dsfsdfsdfsdfsdfsdfsdf");
+void wrongFileNameTouchTest(FileSystem *fileSystem){
+    int error = fileSystem->createFile("dsfsdfsdfsdfsdfsdfsdf");
     assert(error == -2);
-    error = fileSystem->createFile("test");
+}
+
+void correctTouchTest(FileSystem *fileSystem){
+    int error = fileSystem->createFile("test");
     assert(error == 0);
-    error = fileSystem->createFile("test");
+}
+
+void fileAlreadyExistTouchTest(FileSystem *fileSystem){
+    int error = fileSystem->createFile("test");
     assert(error == -4);
-    error = fileSystem->createFile("test1");
+}
+
+void lackOfMemoryTouchTest(FileSystem *fileSystem){
+    int error = fileSystem->createFile("test1");
     assert(error == 0);
     error = fileSystem->createFile("test2");
     assert(error == -1);
+}
+
+void touchTest() {
+    FileSystem *fileSystem = new FileSystem();
+    fileSystem->initialize(80);
+    wrongFileNameTouchTest(fileSystem);
+    correctTouchTest(fileSystem);
+    fileAlreadyExistTouchTest(fileSystem);
+    lackOfMemoryTouchTest(fileSystem);
     delete fileSystem;
     std::cout << "touch tests passed\n";
+}
+
+void wrongFileNameWriteTest(FileSystem *fileSystem){
+    int error = fileSystem->write("testsdgdsgsdgsdgsd","ddsgdsgdsgdfddsgdsgdsgdf");
+    assert( error == -2 );
+}
+
+void fileNotFoundWriteTest(FileSystem *fileSystem){
+    int error = fileSystem->write("test1","ddsgdsgdsgdfddsgdsgdsgdf");
+    assert( error == -3 );
+}
+
+void correctWriteTest(FileSystem *fileSystem){
+    int error = fileSystem->write("test","ddsgdsgdsgdfddsgdsgdsgdf");
+    assert( error == 0 );
+}
+
+void lackOfMemoryWriteTest(FileSystem *fileSystem){
+    int error = fileSystem->write("test","ddsgdsgdsgdfddsgdsgdsgdf");
+    assert( error == -1 );
 }
 
 void writeTest() {
     int error;
     FileSystem *fileSystem = new FileSystem();
-    error = fileSystem->initialize(80);
-    assert(error == 0);
+    fileSystem->initialize(80);
+    fileSystem->createFile("test");
+    wrongFileNameWriteTest(fileSystem);
+    fileNotFoundWriteTest(fileSystem);
+    correctWriteTest(fileSystem);
+    lackOfMemoryWriteTest(fileSystem);
 
-    error = fileSystem->createFile("test");
-    assert(error == 0);
-    error = fileSystem->write("testsdgdsgsdgsdgsd","ddsgdsgdsgdfddsgdsgdsgdf");
-    assert( error == -2 );
-
-    error = fileSystem->write("test1","ddsgdsgdsgdfddsgdsgdsgdf");
-    assert( error == -3 );
-
-    error = fileSystem->write("test","ddsgdsgdsgdfddsgdsgdsgdf");
-    assert( error == 0 );
-
-    error = fileSystem->write("test","ddsgdsgdsgdfddsgdsgdsgdf");
-    assert( error == -1 );
     delete fileSystem;
 
     std::cout << "write test passed\n";
 }
 
+void correctInit(FileSystem *fileSystem){
+    int error = fileSystem->initialize(8000);
+    assert(error == 0);
+}
+
 void initTest() {
     int error = 0;
     FileSystem *fileSystem = new FileSystem();
-    error = fileSystem->initialize(8000);
-    assert(error == 0);
-    error = fileSystem->initialize(8000);
-    assert(error == 0);
+    correctInit(fileSystem);
+    correctInit(fileSystem);
     delete fileSystem;
     fileSystem = new FileSystem();
-    error = fileSystem->initialize(8000);
-    assert(error == 0);
+    correctInit(fileSystem);
     delete fileSystem;
     std::cout << "init tests passed\n";
 
+}
+
+void wrongNameReadTest(FileSystem *fileSystem){
+    std::string str;
+    str = fileSystem->read("gfdgdfgfdgggggggggggg");
+    assert(str == "[ERROR] WRONG FILE NAME\a");
+}
+
+void fileNotFoundReadTest(FileSystem *fileSystem){
+    std::string str;
+    str = fileSystem->read("test");
+    assert(str == "[ERROR] FILE NOT FOUND\a");
+}
+
+void readEmptyFileTest(FileSystem *fileSystem){
+    std::string str;
+    str = fileSystem->read("test");
+    assert(str == "");
+}
+
+void readNotEmptyFileTest(FileSystem *fileSystem){
+    std::string str;
+    str = fileSystem->read("test");
+    assert(str == "ddsgdsgdsgdfddsgdsgdsgdf");
 }
 
 void readTest() {
@@ -77,21 +127,12 @@ void readTest() {
     int error;
     FileSystem *fileSystem = new FileSystem();
     error = fileSystem->initialize(80);
-    assert(error == 0);
-
-    str = fileSystem->read("gfdgdfgfdgggggggggggg");
-    assert(str == "");
-    str = fileSystem->read("test");
-    assert(str == "");
-
-    error = fileSystem->createFile("test");
-    assert(error == 0);
-    str = fileSystem->read("test");
-    assert(str == "$empty file$");
-    error = fileSystem->write("test","ddsgdsgdsgdfddsgdsgdsgdf");
-    assert( error == 0 );
-    str = fileSystem->read("test");
-    assert(str == "ddsgdsgdsgdfddsgdsgdsgdf");
+    wrongNameReadTest(fileSystem);
+    fileNotFoundReadTest(fileSystem);
+    fileSystem->createFile("test");
+    readEmptyFileTest(fileSystem);
+    fileSystem->write("test","ddsgdsgdsgdfddsgdsgdsgdf");
+    readNotEmptyFileTest(fileSystem);
     delete  fileSystem;
     std::cout << "read tests passed\n";
 }
