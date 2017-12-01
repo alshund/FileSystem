@@ -29,6 +29,7 @@ public:
     void setBlockPTR(unsigned char *blockPTR);
 
     bool isEmpty();
+
 };
 
 

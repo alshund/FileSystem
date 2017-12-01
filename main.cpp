@@ -117,7 +117,7 @@ void renameTest() {
     error = fileSystem->renameFile("test","file");
     assert(error == 0);
     delete  fileSystem;
-    std::cout << "renameFile tests passed\n";
+    std::cout << "rename tests passed\n";
 }
 
 void copyTest() {

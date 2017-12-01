@@ -183,7 +183,13 @@ int FileSystem::writeFileBlocks(unsigned int firstBlockIndex, const char *inputB
     if (firstBlockIndex < blockAmount) {
         unsigned int recordedBlocks = ceil( (double) strlen(inputBuffer) / (double) DataBlock::BLOCK_SIZE);
         unsigned int lastRecordedBlock = findLastRecordedBlock(firstBlockIndex);
-
+//        char* lastRecord = fileSystemData[lastRecordedBlock].read();
+//        int offset = strlen(lastRecord);
+//        memcpy(fileSystemData[lastRecordedBlock].getBlockPTR()+offset+DataBlock::POINTER_SIZE,inputBuffer,
+//        DataBlock::BLOCK_SIZE-offset);
+//        char *buffer = new char[strlen(inputBuffer) - (DataBlock::BLOCK_SIZE-offset)];
+//        memcpy(buffer,inputBuffer+(DataBlock::BLOCK_SIZE-offset),
+//               strlen(inputBuffer) - (DataBlock::BLOCK_SIZE-offset));
         bool findEmptyBlock;
         for (int recordedBlockIndex = 0; recordedBlockIndex < recordedBlocks; recordedBlockIndex++) {
             unsigned int blockIndex = 0;
@@ -210,11 +216,13 @@ int FileSystem::writeFileBlocks(unsigned int firstBlockIndex, const char *inputB
 std::string FileSystem::read(const char *fileName) {
 
     int fileIndex = findFileIndex(fileName);
-    if (fileIndex == ErrorsCode::FILE_NOT_FOUND || fileIndex == ErrorsCode::WRONG_FILE_NAME) {
-        return "";
+    if (fileIndex == ErrorsCode::FILE_NOT_FOUND) {
+        return "[ERROR] FILE NOT FOUND\a";
+    } else if (fileIndex == ErrorsCode::WRONG_FILE_NAME) {
+        return "[ERROR] WRONG FILE NAME\a";
     } else {
         std::string str = readFileBlocks(fileIndex);
-        if(str == "") str = "$empty file$";
+        if(str == "") str = "";
         return str;
     }
 }
@@ -445,7 +453,7 @@ int FileSystem::findFileIndex(const char *fileName) {
 
 
 FileSystem::~FileSystem() {
-
+    delete fileSystemData;
     UnmapViewOfFile(this->fileMappingPTR);
     CloseHandle(this->hFileMapping);
     CloseHandle(this->hFile);
