@@ -54,7 +54,7 @@ public:
     void showAllFiles();
     void dump();
 
-    virtual ~FileSystem();
+    ~FileSystem();
 };
 
 

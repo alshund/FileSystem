@@ -3,66 +3,117 @@
 #include <vector>
 #include <assert.h>
 #include "FileSystem.h"
+#include "ErrorsCode.h"
 
 
-void touchTest() {
-    int error;
-    FileSystem *fileSystem = new FileSystem();
-    error = fileSystem->initialize(80);
-    assert(error == 0);
-
-    error = fileSystem->createFile("dsfsdfsdfsdfsdfsdfsdf");
+void wrongFileNameTouchTest(FileSystem *fileSystem){
+    int error = fileSystem->createFile("dsfsdfsdfsdfsdfsdfsdf");
     assert(error == -2);
-    error = fileSystem->createFile("test");
+}
+
+void correctTouchTest(FileSystem *fileSystem){
+    int error = fileSystem->createFile("test");
     assert(error == 0);
-    error = fileSystem->createFile("test");
+}
+
+void fileAlreadyExistTouchTest(FileSystem *fileSystem){
+    int error = fileSystem->createFile("test");
     assert(error == -4);
-    error = fileSystem->createFile("test1");
+}
+
+void lackOfMemoryTouchTest(FileSystem *fileSystem){
+    int error = fileSystem->createFile("test1");
     assert(error == 0);
     error = fileSystem->createFile("test2");
     assert(error == -1);
+}
+
+void touchTest() {
+    FileSystem *fileSystem = new FileSystem();
+    fileSystem->initialize(80);
+    wrongFileNameTouchTest(fileSystem);
+    correctTouchTest(fileSystem);
+    fileAlreadyExistTouchTest(fileSystem);
+    lackOfMemoryTouchTest(fileSystem);
     delete fileSystem;
     std::cout << "touch tests passed\n";
+}
+
+void wrongFileNameWriteTest(FileSystem *fileSystem){
+    int error = fileSystem->write("testsdgdsgsdgsdgsd","ddsgdsgdsgdfddsgdsgdsgdf");
+    assert( error == -2 );
+}
+
+void fileNotFoundWriteTest(FileSystem *fileSystem){
+    int error = fileSystem->write("test1","ddsgdsgdsgdfddsgdsgdsgdf");
+    assert( error == -3 );
+}
+
+void correctWriteTest(FileSystem *fileSystem){
+    int error = fileSystem->write("test","ddsgdsgdsgdfddsgdsgdsgdf");
+    assert( error == 0 );
+}
+
+void lackOfMemoryWriteTest(FileSystem *fileSystem){
+    int error = fileSystem->write("test","ddsgdsgdsgdfddsgdsgdsgdf");
+    assert( error == -1 );
 }
 
 void writeTest() {
     int error;
     FileSystem *fileSystem = new FileSystem();
-    error = fileSystem->initialize(80);
-    assert(error == 0);
+    fileSystem->initialize(80);
+    fileSystem->createFile("test");
+    wrongFileNameWriteTest(fileSystem);
+    fileNotFoundWriteTest(fileSystem);
+    correctWriteTest(fileSystem);
+    lackOfMemoryWriteTest(fileSystem);
 
-    error = fileSystem->createFile("test");
-    assert(error == 0);
-    error = fileSystem->write("testsdgdsgsdgsdgsd","ddsgdsgdsgdfddsgdsgdsgdf");
-    assert( error == -2 );
-
-    error = fileSystem->write("test1","ddsgdsgdsgdfddsgdsgdsgdf");
-    assert( error == -3 );
-
-    error = fileSystem->write("test","ddsgdsgdsgdfddsgdsgdsgdf");
-    assert( error == 0 );
-
-    error = fileSystem->write("test","ddsgdsgdsgdfddsgdsgdsgdf");
-    assert( error == -1 );
     delete fileSystem;
 
     std::cout << "write test passed\n";
 }
 
+void correctInit(FileSystem *fileSystem){
+    int error = fileSystem->initialize(8000);
+    assert(error == 0);
+}
+
 void initTest() {
     int error = 0;
     FileSystem *fileSystem = new FileSystem();
-    error = fileSystem->initialize(8000);
-    assert(error == 0);
-    error = fileSystem->initialize(8000);
-    assert(error == 0);
+    correctInit(fileSystem);
+    correctInit(fileSystem);
     delete fileSystem;
     fileSystem = new FileSystem();
-    error = fileSystem->initialize(8000);
-    assert(error == 0);
+    correctInit(fileSystem);
     delete fileSystem;
     std::cout << "init tests passed\n";
 
+}
+
+void wrongNameReadTest(FileSystem *fileSystem){
+    std::string str;
+    str = fileSystem->read("gfdgdfgfdgggggggggggg");
+    assert(str == "[ERROR] WRONG FILE NAME\a");
+}
+
+void fileNotFoundReadTest(FileSystem *fileSystem){
+    std::string str;
+    str = fileSystem->read("test");
+    assert(str == "[ERROR] FILE NOT FOUND\a");
+}
+
+void readEmptyFileTest(FileSystem *fileSystem){
+    std::string str;
+    str = fileSystem->read("test");
+    assert(str == "");
+}
+
+void readNotEmptyFileTest(FileSystem *fileSystem){
+    std::string str;
+    str = fileSystem->read("test");
+    assert(str == "ddsgdsgdsgdfddsgdsgdsgdf");
 }
 
 void readTest() {
@@ -70,21 +121,12 @@ void readTest() {
     int error;
     FileSystem *fileSystem = new FileSystem();
     error = fileSystem->initialize(80);
-    assert(error == 0);
-
-    str = fileSystem->read("gfdgdfgfdgggggggggggg");
-    assert(str == "");
-    str = fileSystem->read("test");
-    assert(str == "");
-
-    error = fileSystem->createFile("test");
-    assert(error == 0);
-    str = fileSystem->read("test");
-    assert(str == "$empty file$");
-    error = fileSystem->write("test","ddsgdsgdsgdfddsgdsgdsgdf");
-    assert( error == 0 );
-    str = fileSystem->read("test");
-    assert(str == "ddsgdsgdsgdfddsgdsgdsgdf");
+    wrongNameReadTest(fileSystem);
+    fileNotFoundReadTest(fileSystem);
+    fileSystem->createFile("test");
+    readEmptyFileTest(fileSystem);
+    fileSystem->write("test","ddsgdsgdsgdfddsgdsgdsgdf");
+    readNotEmptyFileTest(fileSystem);
     delete  fileSystem;
     std::cout << "read tests passed\n";
 }
@@ -186,19 +228,39 @@ int main() {
     run_all_tests();
     FileSystem *fileSystem = new FileSystem();
     fileSystem->open("system", 8000);
-
-
     std::string input;
     std::string word;
+    std::string wordHolder;
+    boolean complex_word = false;
     int error = 0;
 
 
     while (true) {
         std::getline(std::cin, input);
+        int count = 0;
+
         std::istringstream iss(input, std::istringstream::in);
         std::vector<std::string> wordsVector;
         while (iss >> word) {
-            wordsVector.push_back(word);
+            if(word[0] == '\"'){
+                wordHolder = "";
+                complex_word = true;
+                word = word.substr(1, word.size());
+            }
+
+            if(!complex_word) wordsVector.push_back(word);
+            else wordHolder += word + " ";
+
+            if(word.back() == '\"'){
+                complex_word = false;
+                wordHolder = wordHolder.substr(0, wordHolder.size()-2);
+                wordsVector.push_back(wordHolder);
+            }
+
+        }
+
+        for(std::string out : wordsVector){
+            std::cout<<out<<"\n";
         }
 
         if (wordsVector.size()) {
@@ -226,7 +288,6 @@ int main() {
             } else if (wordsVector[0] == "rename") {
                 if (wordsVector.size() == 3) {
                     error = fileSystem->renameFile(wordsVector[1].c_str(), wordsVector[2].c_str());
-
                 } else std::cout << "wrong parameters\n";
             } else if (wordsVector[0] == "copy") {
                 if (wordsVector.size() == 3) {
@@ -276,17 +337,17 @@ int main() {
 
 
             switch (error) {
-                case -1:
-                    std::cout << "lack of memory\n";
+                case ErrorsCode::LACK_OF_MEMORY:
+                    std::cerr << "lack of memory\a\n";
                     break;
-                case -2:
-                    std::cout << "wrong file name\n";
+                case ErrorsCode::WRONG_FILE_NAME:
+                    std::cerr << "wrong file name\a\n";
                     break;
-                case -3:
-                    std::cout << "file not found\n";
+                case ErrorsCode::FILE_NOT_FOUND:
+                    std::cerr << "file not found\a\n";
                     break;
-                case -4:
-                    std::cout << "file already exist\n";
+                case ErrorsCode::FILE_ALREADY_EXIST:
+                    std::cerr << "file already exist\a\n";
                     break;
             }
 

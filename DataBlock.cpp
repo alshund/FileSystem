@@ -4,6 +4,7 @@
 
 #include <wchar.h>
 #include <sstream>
+#include <iostream>
 #include "DataBlock.h"
 
 void DataBlock::write(const char *buffer) {
