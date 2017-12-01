@@ -7,8 +7,10 @@
 #include <algorithm>
 #include "FileSystem.h"
 #include "ErrorsCode.h"
+#include "Jingle.h"
 
 FileSystem *fileSystem;
+bool shellState = true;
 
 typedef std::function<int(std::vector<std::string>)> functionPtr;
 
@@ -340,6 +342,30 @@ int cls(std::vector<std::string> wordsVector) {
     }
 }
 
+int closeFileSystem(std::vector<std::string> wordsVector) {
+
+    if (wordsVector.size() == 1) {
+        shellState = false;
+        return ErrorsCode::SUCCESSFUL_IMPLEMENTATION;
+    } else {
+        return -5;
+    }
+}
+
+int play(std::vector<std::string> wordsVector) {
+    if (wordsVector.size() == 1) {
+        std::cout << "Happy New Year!!!" << std::endl;
+
+        Jingle::refrenSolo();
+        Jingle::coupleSolo();
+        Jingle::refrenSolo();
+
+    } else {
+        return -5;
+    }
+}
+
+
 int main() {
     run_all_tests();
     fileSystem = new FileSystem();
@@ -359,7 +385,8 @@ int main() {
     functionPtr dumpPtr = dump;
     functionPtr helpPtr = showHelp;
     functionPtr clsPtr = cls;
-
+    functionPtr closePtr = closeFileSystem;
+    functionPtr jinglePtr = play;
 
     std::map<std::string, functionPtr> commands = {{"touch", touchPtr},
                                                    {"write", writePtr},
@@ -370,11 +397,13 @@ int main() {
                                                    {"ls", lsPtr},
                                                    {"dump", dumpPtr},
                                                    {"showHelp", helpPtr},
-                                                   {"cls", clsPtr}};
+                                                   {"cls", clsPtr},
+                                                   {"close", closePtr},
+                                                   {"Jingle!", jinglePtr}};
 
 
 
-    while (true) {
+    while (shellState) {
         std::getline(std::cin, input);
         std::istringstream iss(input, std::istringstream::in);
         std::vector<std::string> wordsVector;
@@ -403,4 +432,5 @@ int main() {
                 break;
         }
     }
+    return 0;
 }
