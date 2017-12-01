@@ -43,7 +43,7 @@ private:
 
 public:
 
-    int open(const char *fileSystemName, size_t fileSize);
+    int open(const char *fileSystemName, size_t fileSize=8000);
     int initialize(size_t preferredSize);
     int createFile(const char *fileName);
     std::string read(const char *fileName);
